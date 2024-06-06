@@ -1,0 +1,36 @@
+{
+	"LogLevel": 3,
+	"MasterPass": "exampleMasterPassword",
+	"Atomic": 8,
+	"PoolAddress": "xel:2p56mrrqhrvzrnd79sa40h7kgr3f0jrnty4g87akzghaymxmg4lqq45j97r",
+	"FeeAddress": "xel:2samc3f3ghrzsts6ql2gn3uxgher9w92rcmcmtlywtnjngjtudvsqaawa6l",
+	"BlockTime": 15,
+	"AddressPrefix": "xel",
+	"Slave": {
+		"MasterAddress": "127.0.0.1:3221",
+		"XatumPort": 5212,
+		"GetworkPort": 15210,
+		"StratumPort": 9351,
+		"InitialDifficulty": 500,
+		"MinDifficulty": 500,
+		"ShareTarget": 15,
+		"TrustScore": 50,
+		"TrustedCheckChance": 25
+	},
+	"Master": {
+		"WalletRpc": "127.0.0.1:4111",
+		"DaemonRpc": "127.0.0.1:8080",
+
+		"WalletRpcUser": "user",
+		"WalletRpcPass": "secure-password-here",
+		
+		"MinConfs": 2,
+
+		"Port": 3221,
+		"ApiPort": 4006,
+		"FeePercent": 1,
+
+		"MinWithdrawal": 0.1,
+		"WithdrawalFee": 0.002
+	}
+}

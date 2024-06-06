@@ -1,0 +1,7 @@
+*.db
+stats.json
+*.pem
+build
+cmd/master/master
+cmd/slave/slave
+*.pprof
