@@ -87,7 +87,7 @@ func (c *CData) GetNextDiff() float64 {
 	seconds := time.Since(c.LastShare).Seconds()
 
 	if seconds > 3600 {
-		return d
+		return float64(cfg.Cfg.Slave.MinDifficulty)
 	}
 
 	if seconds > 1 {

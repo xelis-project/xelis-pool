@@ -5,3 +5,4 @@ build
 cmd/master/master
 cmd/slave/slave
 *.pprof
+config.json
