@@ -397,9 +397,7 @@ func SendJobGetwork(v *GetworkConn, blockDiff uint64, blob xelisutil.BlockMiner)
 
 	diff := uint64(v.CData.GetNextDiff())
 
-	if diff < cfg.Cfg.Slave.MinDifficulty {
-		diff = cfg.Cfg.Slave.MinDifficulty
-	} else if diff > blockDiff {
+	if diff > blockDiff {
 		diff = blockDiff
 	}
 

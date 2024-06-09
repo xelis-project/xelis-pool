@@ -80,19 +80,15 @@ func (c *Connection) LastJob() ConnJob {
 func (c *CData) GetNextDiff() float64 {
 	d := c.NextDiff
 
-	if d < float64(cfg.Cfg.Slave.MinDifficulty) {
-		return float64(cfg.Cfg.Slave.MinDifficulty)
-	}
-
 	seconds := time.Since(c.LastShare).Seconds()
-
-	if seconds > 3600 {
-		return float64(cfg.Cfg.Slave.MinDifficulty)
-	}
 
 	if seconds > 1 {
 		// difficulty halves every 40 seconds
 		d /= 1 + (seconds / 40)
+	}
+
+	if d < float64(cfg.Cfg.Slave.MinDifficulty) {
+		return float64(cfg.Cfg.Slave.MinDifficulty)
 	}
 
 	return d
