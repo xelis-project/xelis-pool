@@ -43,6 +43,9 @@ Originally written from scratch in Go by [XelPool](https://XelPool.com/), it's n
 }
 ```
 
+## Web UI
+An example Web UI can be found in the webui folder.
+
 ## License
 XELIS-POOL is licensed under AGPL v3.
 
