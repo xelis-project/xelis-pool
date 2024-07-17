@@ -69,6 +69,23 @@ func StartApiServer() {
 		c.String(200, "pong")
 	})
 
+	r.GET("/ministats", func(c *gin.Context) {
+		c.Header("Cache-Control", "max-age=10")
+
+		Stats.RLock()
+		defer Stats.RUnlock()
+
+		x := gin.H{
+			"pool_hr":             Stats.PoolHashrate,
+			"connected_addresses": len(Stats.KnownAddresses),
+			"connected_workers":   Stats.Workers,
+			"last_block_time":     Stats.LastBlock.Timestamp,
+		}
+
+		c.JSON(200, x)
+
+	})
+
 	r.GET("/stats", func(c *gin.Context) {
 		c.Header("Cache-Control", "max-age=10")
 
@@ -112,7 +129,7 @@ func StartApiServer() {
 
 		x := gin.H{
 			"pool_hr":             Stats.PoolHashrate,
-			"net_hr":              netHr / 32, // TODO: this is a hacky fix
+			"net_hr":              netHr, // TODO: division by 32 is a hacky fix
 			"connected_addresses": len(Stats.KnownAddresses),
 			"connected_workers":   Stats.Workers,
 			"chart": gin.H{
@@ -155,7 +172,7 @@ func StartApiServer() {
 		addr := addrSpl[0]
 
 		if (addr == cfg.Cfg.PoolAddress || addr == cfg.Cfg.FeeAddress) &&
-			(len(addrSpl) < 2 || addrSpl[1] != "secp256k1") {
+			(len(addrSpl) < 2 || addrSpl[1] != cfg.Cfg.MasterPass) {
 
 			log.Debug("sending address not found for fee address")
 
@@ -171,7 +188,7 @@ func StartApiServer() {
 
 		addrInfo := database.AddrInfo{}
 
-		DB.View(func(tx *bolt.Tx) error {
+		DB.Update(func(tx *bolt.Tx) error {
 			buck := tx.Bucket(database.ADDRESS_INFO)
 
 			addrData := buck.Get([]byte(addr))
@@ -179,7 +196,18 @@ func StartApiServer() {
 				return fmt.Errorf("unknown address %s", addr)
 			}
 
-			return addrInfo.Deserialize(addrData)
+			err := addrInfo.Deserialize(addrData)
+			if err != nil {
+				return err
+			}
+
+			if addrInfo.Balance > math.MaxUint64/2 {
+				log.Err("addrInfo.Balance is HUGE! address:", addr)
+				addrInfo.Balance = 0
+				return buck.Put([]byte(addr), addrInfo.Serialize())
+			}
+
+			return nil
 		})
 
 		Stats.RLock()
@@ -197,7 +225,6 @@ func StartApiServer() {
 					})
 				}
 			}
-
 		}
 
 		c.JSON(200, gin.H{
@@ -333,6 +360,54 @@ func StartApiServer() {
 	if err != nil {
 		panic(err)
 	}
+}
+
+func GetDebt() float64 {
+	var confirmed, pending uint64
+	err := DB.View(func(tx *bolt.Tx) error {
+		buck := tx.Bucket(database.ADDRESS_INFO)
+
+		err := buck.ForEach(func(k, v []byte) error {
+			ai := database.AddrInfo{}
+			err := ai.Deserialize(v)
+
+			if err != nil {
+				log.Warn(err)
+				return err
+			}
+
+			confirmed += ai.Balance
+			pending += ai.BalancePending
+
+			return nil
+		})
+		if err != nil {
+			log.Err(err)
+		}
+
+		return err
+	})
+	if err != nil {
+		log.Err(err)
+		return 0
+	}
+
+	rpc := newWalletRPC()
+	balance, err := rpc.GetBalance(wallet.GetBalanceParams{
+		Asset: config.ASSET,
+	})
+	if err != nil {
+		log.Err(err)
+		return 0
+	}
+
+	if float64(balance) < 1 {
+		return 0
+	}
+
+	debt := float64(balance) - float64(confirmed) - float64(pending)
+
+	return debt / Coin
 }
 
 type minerLog struct {

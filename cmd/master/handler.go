@@ -142,7 +142,6 @@ func OnMessage(msg []byte, connId uint64, conn net.Conn) {
 		}
 		Stats.Unlock()
 	case 4: // Ban
-
 		bannedIp := d.ReadString()
 		banEnds := d.ReadUint64()
 
@@ -157,7 +156,6 @@ func OnMessage(msg []byte, connId uint64, conn net.Conn) {
 		log.Err("unknown packet type", packet)
 		return
 	}
-
 }
 
 // ban master to server packet

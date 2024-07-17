@@ -95,8 +95,8 @@ func statsSender(s *server.Server, gws *GetworkServer, strat *StratumServer) {
 		strat.RLock()
 		slave.SendStats(len(s.Connections)+len(strat.Conns), len(gws.Conns))
 		strat.RUnlock()
-		s.RUnlock()
 		gws.RUnlock()
+		s.RUnlock()
 	}
 }
 

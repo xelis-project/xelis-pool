@@ -255,8 +255,8 @@ func (s *Statistics) Cleanup() {
 		return
 	}
 
-	// only keep the last 50 blocks found
-	for len(s.BlocksFound) > 50 {
+	// only keep the last 100 blocks found
+	for len(s.BlocksFound) > 100 {
 		s.BlocksFound = s.BlocksFound[:len(s.BlocksFound)-2]
 	}
 

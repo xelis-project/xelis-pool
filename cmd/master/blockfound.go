@@ -16,7 +16,9 @@
 package main
 
 import (
+	"strings"
 	"time"
+	"xelpool/cfg"
 	"xelpool/log"
 
 	"github.com/disgoorg/disgo/discord"
@@ -40,6 +42,10 @@ func OnBlockFound(hash string) {
 	Stats.Lock()
 	defer Stats.Unlock()
 
+	if bl.Height == 0 {
+		bl.Height = Stats.LastBlock.Height + 1
+	}
+
 	Stats.LastBlock = LastBlock{
 		Height:    bl.Height,
 		Timestamp: time.Now().Unix(),
@@ -60,7 +66,7 @@ func OnBlockFound(hash string) {
 
 	if discordWebhook != nil {
 		_, err = discordWebhook.CreateEmbeds([]discord.Embed{discord.NewEmbedBuilder().
-			SetTitlef("Block found at height %d", bl.Height).
+			SetTitlef("%s block found at height %d", strings.ToUpper(cfg.Cfg.AddressPrefix), bl.Height).
 			SetDescriptionf("Hash: %s\nEffort: %f %%", hash, effort*100).
 			Build(),
 		})

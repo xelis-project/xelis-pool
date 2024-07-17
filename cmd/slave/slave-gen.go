@@ -35,8 +35,6 @@ import (
 	"xelpool/xatum"
 	"xelpool/xatum/server"
 	"xelpool/xelisutil"
-
-	"github.com/xelpool/xelishash"
 )
 
 func GenExtraNonce() (x [32]byte) {
@@ -130,11 +128,11 @@ func handleConnPacket(cdat *server.CData, str string, packetsRecv int, ip string
 			}
 		}
 
-		if !slices.Contains(pData.Algos, config.ALGO) {
+		if !slices.Contains(pData.Algos, "xel/0") && !slices.Contains(pData.Algos, "xel/1") {
 			return &xatum.S2C_Print{
-				Msg: "your miner does not support algorithm " + config.ALGO,
+				Msg: "your miner does not support xel/0 or xel/1 algorithms",
 				Lvl: 3,
-			}, true, errors.New("your miner does not support algorithm " + config.ALGO)
+			}, true, errors.New("your miner does not support xel/0 or xel/1 algorithms")
 		}
 
 		log.Infof("New miner | Address: %s %s UserAgent: %s Algos: %s", wall, pData.Work, pData.Agent, pData.Algos)
@@ -297,17 +295,26 @@ func handleConnPacket(cdat *server.CData, str string, packetsRecv int, ip string
 		}
 
 		go func() {
+			MutLastJob.RLock()
+			algo := LastKnownJob.Algo
+			if algo != "xel/0" && algo != "xel/1" {
+				log.Err("algo is invalid: " + algo + " - setting it to xel/1")
+				algo = "xel/1"
+			}
+			MutLastJob.RUnlock()
+
 			// validate PoW if forced
 
 			if ForcePowCheck {
 				t := time.Now()
-				sp := xelishash.ScratchPad{}
 
-				pow := bm.PowHash(&sp)
+				log.Debug("computing Forced PoW with algo", algo)
+
+				pow := bm.PowHash(algo)
 
 				powHash = pow[:]
 
-				log.Debugf("Forced PoW check done in %v, result %x", time.Since(t).String(), pow)
+				log.Debugf("computed Forced PoW in %v, result %x", time.Since(t).String(), pow)
 			}
 
 			if [32]byte(powHash) == [32]byte{} {
@@ -317,7 +324,6 @@ func handleConnPacket(cdat *server.CData, str string, packetsRecv int, ip string
 
 			// validate difficulty
 			if !xelisutil.CheckDiff([32]byte(powHash), minerJob.Diff) {
-
 				log.Warn("hash does not meet target, ForcePowCheck:", ForcePowCheck)
 				if ForcePowCheck {
 					cdat.Lock()
@@ -344,11 +350,10 @@ func handleConnPacket(cdat *server.CData, str string, packetsRecv int, ip string
 					util.RandomFloat()*100 < cfg.Cfg.Slave.TrustedCheckChance {
 
 					t := time.Now()
-					sp := xelishash.ScratchPad{}
 
-					pow := bm.PowHash(&sp)
+					pow := bm.PowHash(algo)
 
-					log.Debugf("PoW checked in %v", time.Since(t).String())
+					log.Debugf("PoW checked in %v algo: %s", time.Since(t).String(), algo)
 
 					if pow != [32]byte(powHash) {
 						cdat.Lock()

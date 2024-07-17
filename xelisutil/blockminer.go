@@ -22,7 +22,6 @@ import (
 	"time"
 
 	"github.com/duggavo/serializer"
-	"github.com/xelpool/xelishash"
 )
 
 // Xatum Protocol BlockMiner implementation
@@ -98,8 +97,8 @@ func (b BlockMiner) Serialize() []byte {
 func (b BlockMiner) Hash() [32]byte {
 	return FastHash(b[:])
 }
-func (b BlockMiner) PowHash(sp *xelishash.ScratchPad) [32]byte {
-	return PowHash(b[:], sp)
+func (b BlockMiner) PowHash(algo string) [32]byte {
+	return PowHash(b[:], algo)
 }
 
 func (b BlockMiner) GetWorkhash() [32]byte {

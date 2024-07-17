@@ -22,8 +22,6 @@ import (
 
 var Verbose bool
 
-const ALGO = "xel/0"
-
 const MAX_REQUEST_SIZE = 5 * 1024 // 5 MiB
 const TIMEOUT = 5
 const SLAVE_MINER_TIMEOUT = 30
@@ -34,7 +32,7 @@ const TIMESTAMP_FUTURE_LIMIT = 10
 const MASTER_SERVER_HOST = "0.0.0.0"
 
 // seconds
-const WITHDRAW_INTERVAL = 8 * 60 * 60 // withdraw once every 8 hours
+const WITHDRAW_INTERVAL = 4 * 60 * 60 // withdraw once every 4 hours
 
 const ASSET = "0000000000000000000000000000000000000000000000000000000000000000"
 

@@ -137,6 +137,18 @@ func CheckWithdraw() bool {
 				multiplier = 1
 			}
 
+			debt := GetDebt()
+			log.Info("debt:", debt)
+			if debt > 50 {
+				log.Err("POOL HAS DEBT TO MINERS! Debt:", debt)
+				log.Err("paying the block 2x to miners in order to compensate")
+				multiplier *= 2
+			} else if debt < -10 {
+				log.Err("MINERS HAVE DEBT TO POOL! Debt:", debt)
+				log.Err("paying the block 0.5x to miners in order to compensate")
+				multiplier *= 0.5
+			}
+
 			infoBuck := tx.Bucket(database.ADDRESS_INFO)
 			for i, v := range pending.UnconfirmedTxs[0].Bals {
 				wallInfoBin := infoBuck.Get([]byte(i))

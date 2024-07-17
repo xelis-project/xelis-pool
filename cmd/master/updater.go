@@ -169,8 +169,7 @@ func UpdatePendingBals() {
 		AcceptOutgoing: false,
 
 		MinTopoheight: &minHeight,
-
-		Address: &curAddy,
+		Address:       &curAddy,
 	})
 
 	minHeightMut.Unlock()
@@ -220,7 +219,10 @@ func UpdatePendingBals() {
 
 				rewardNoFee := float64(vt.Coinbase.Reward)
 				log.Debug("reward before fee is", rewardNoFee/Coin)
-				reward := rewardNoFee * (100 - cfg.Cfg.Master.FeePercent) / 100
+
+				fee := cfg.Cfg.Master.FeePercent
+
+				reward := rewardNoFee * (100 - fee) / 100
 				log.Debug("reward after fee is", reward/Coin)
 
 				var totHashes float64
@@ -274,7 +276,7 @@ func UpdatePendingBals() {
 				}
 
 				var minersBalances = make(map[string]float64, len(minersTotalHashes))
-				var totalRewarded uint64 // totalReward is slightly smaller than rewardNoFee because of rounding errors
+				var totalRewarded uint64 // totalReward is slightly smaller than rewardNoFee because of uint64 rounding error
 				for i, v := range minersTotalHashes {
 					minersBalances[i] = v * float64(reward) / totHashes
 
@@ -316,33 +318,33 @@ func UpdatePendingBals() {
 
 		infoBuck := tx.Bucket(database.ADDRESS_INFO)
 
-		for i, v := range totalPendings {
-			log.Devf("Setting pending %s to %f", i, float64(v)/math.Pow10(cfg.Cfg.Atomic))
+		c := infoBuck.Cursor()
 
-			addrInfoBin := infoBuck.Get([]byte(i))
+		for k, infoBin := c.First(); k != nil; k, infoBin = c.Next() {
+			pendBal := totalPendings[string(k)]
+
+			log.Devf("Setting pending %s to %f", k, float64(pendBal)/math.Pow10(cfg.Cfg.Atomic))
 
 			addrInfo := database.AddrInfo{}
-
-			if addrInfoBin == nil {
-				log.Dev("addrInfo is nil")
+			if infoBin == nil {
+				log.Warn("infoBin is nil")
 			} else {
-				err = addrInfo.Deserialize(addrInfoBin)
+				err = addrInfo.Deserialize(infoBin)
 				if err != nil {
 					log.Warn(err)
 					continue
 				}
 			}
 
-			addrInfo.BalancePending = v
+			addrInfo.BalancePending = pendBal
 
-			err := infoBuck.Put([]byte(i), addrInfo.Serialize())
+			err := infoBuck.Put(k, addrInfo.Serialize())
 			if err != nil {
 				log.Err(err)
 			}
 		}
 
 		return pendingBuck.Put([]byte("pending"), pending.Serialize())
-
 	})
 
 	if err != nil {

@@ -26,17 +26,14 @@ func GetPplnsWindow() uint64 {
 		return 2 * 3600 * 24
 	}
 
-	// PPLNS window is 1/64 of average pool block found time
-	blockFoundInterval /= 64
-
 	// PPLNS window is at most 1 hour
-	if blockFoundInterval > 2*3600 {
+	if blockFoundInterval > 1*3600 {
 		return 1 * 3600
 	}
 
-	// PPLNS window is at most the block time
+	// PPLNS window is at most twice the block time
 	if blockFoundInterval < float64(cfg.Cfg.BlockTime)*2 {
-		return cfg.Cfg.BlockTime //* 2
+		return cfg.Cfg.BlockTime * 2
 	}
 
 	return uint64(blockFoundInterval)

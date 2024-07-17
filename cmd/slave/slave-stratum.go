@@ -296,7 +296,7 @@ func handleStratumConn(_ *StratumServer, c *StratumConn) {
 					},
 				})
 
-				log.Warn("Invalid wallet address", wall)
+				log.Debug("Invalid wallet address", wall)
 				c.Close()
 
 				c.CData.Unlock()
@@ -496,6 +496,10 @@ func (c *StratumConn) SendJob(bm xelisutil.BlockMiner) error {
 	})
 	c.LastOutID++*/
 
+	MutLastJob.RLock()
+	algo := LastKnownJob.Algo
+	MutLastJob.RUnlock()
+
 	return c.WriteJSON(stratum.RequestOut{
 		Id:     c.LastOutID,
 		Method: "mining.notify",
@@ -503,7 +507,7 @@ func (c *StratumConn) SendJob(bm xelisutil.BlockMiner) error {
 			hex.EncodeToString(jobid[:]),
 			timeStr,
 			hex.EncodeToString(workhash[:]),
-			"xel/0",
+			algo,
 			true,
 		},
 	})

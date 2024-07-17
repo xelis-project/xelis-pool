@@ -16,8 +16,9 @@
 package mut
 
 import (
-	"sync"
 	"xelpool/log"
+
+	sync "github.com/sasha-s/go-deadlock"
 )
 
 type RWMutex struct {

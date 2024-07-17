@@ -18,7 +18,9 @@ package main
 import (
 	"encoding/hex"
 	"errors"
+	"fmt"
 	"strconv"
+	"strings"
 	"time"
 	"xelpool/cfg"
 	"xelpool/config"
@@ -45,6 +47,7 @@ type MemJob struct {
 	Blob   xelisutil.BlockMiner
 	Diff   uint64
 	Height uint64
+	Algo   string
 }
 
 var gwConn *getwork.Getwork
@@ -96,7 +99,18 @@ func getworkConn(srv *server.Server, srvgw *GetworkServer, srvstr *StratumServer
 			continue
 		}
 
-		log.Infof("new job: height %d blob %s diff %s", job.Height, job.Template, job.Difficulty)
+		job.Algorithm = strings.ToLower(job.Algorithm)
+		if job.Algorithm == "v1" || job.Algorithm == "xel/v1" || job.Algorithm == "" {
+			job.Algorithm = "xel/0"
+		} else if job.Algorithm == "v2" || job.Algorithm == "xel/v2" {
+			job.Algorithm = "xel/1"
+		} else {
+			err := fmt.Errorf("unknown algorithm received: %s", job.Algorithm)
+			log.Fatal(err)
+		}
+
+		log.Infof("new job: height %d blob %s diff %s algo %s", job.Height, job.Template, job.Difficulty,
+			job.Algorithm)
 
 		if len(blob) != xelisutil.BLOCKMINER_LENGTH {
 			log.Warnf("blob is not %d bytes long", xelisutil.BLOCKMINER_LENGTH)
@@ -116,8 +130,10 @@ func getworkConn(srv *server.Server, srvgw *GetworkServer, srvstr *StratumServer
 
 		MutLastJob.Lock()
 		LastKnownJob = MemJob{
-			Blob: bl,
-			Diff: diff,
+			Blob:   bl,
+			Diff:   diff,
+			Height: job.Height,
+			Algo:   job.Algorithm,
 		}
 		MutLastJob.Unlock()
 	}

@@ -36,7 +36,7 @@ func handleXatumConns(s *server.Server) {
 
 		ipAddr := util.RemovePort(conn.Conn.RemoteAddr().String())
 
-		log.Info("Xatum miner with IP", ipAddr, "connectioned")
+		log.Info("new Xatum miner with IP", ipAddr)
 
 		go handleConn(s, conn)
 	}

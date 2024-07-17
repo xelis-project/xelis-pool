@@ -18,23 +18,15 @@ package address
 import (
 	"xelpool/cfg"
 	"xelpool/log"
-	"xelpool/xelisutil/bech32"
+
+	"github.com/xelis-project/xelis-go-sdk/address"
 )
 
-const PREFIX = "xel:"
-
 func IsAddressValid(addr string) bool {
-	prefix, data, err := bech32.Decode(addr)
-	if err != nil {
+	address.PrefixAddress = cfg.Cfg.AddressPrefix
+	valid, err := address.IsValidAddress(addr)
+	if err != nil || !valid {
 		log.Debugf("address is not valid: %s", err)
-		return false
-	}
-
-	if prefix != cfg.Cfg.AddressPrefix {
-		return false
-	}
-	if len(data) < 53 || len(data) > 70 {
-		log.Warnf("address data %x is less than 53 or more than 70 bytes long", data)
 		return false
 	}
 

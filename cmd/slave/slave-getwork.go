@@ -74,34 +74,37 @@ func fmtMessageType(mt int) string {
 
 // sends a job to all the websockets, and removes old websockets
 func (s *GetworkServer) sendGetworkJobs(diff uint64, blob xelisutil.BlockMiner) {
-	s.Lock()
-	log.Dev("sendJobToWebsocket: num sockets:", len(s.Conns))
+	sockets2 := make([]*GetworkConn, 0)
+	func() {
+		s.Lock()
+		defer s.Unlock()
+		log.Dev("sendJobToWebsocket: num sockets:", len(s.Conns))
 
-	// remove disconnected sockets
+		// remove disconnected sockets
 
-	sockets2 := make([]*GetworkConn, 0, len(s.Conns))
-	for _, c := range s.Conns {
-		if c == nil {
-			log.Err("THIS SHOULD NOT HAPPEN - connection is nil")
-			continue
+		for _, c := range s.Conns {
+			if c == nil {
+				log.Err("THIS SHOULD NOT HAPPEN - connection is nil")
+				continue
+			}
+			if !c.Alive {
+				log.Debug("connection with IP", c.IP, "disconnected")
+
+				// DDoS protection disconnect
+				ratelimit.Disconnect(c.IP)
+
+				continue
+			}
+			sockets2 = append(sockets2, c)
 		}
-		if !c.Alive {
-			log.Debug("connection with IP", c.IP, "disconnected")
+		log.Dev("sendJobToWebsocket: going from", len(s.Conns), "to", len(sockets2), "getwork miners")
+		s.Conns = sockets2
 
-			// DDoS protection disconnect
-			ratelimit.Disconnect(c.IP)
-
-			continue
+		if len(s.Conns) > 0 {
+			log.Info("Sending job to", len(s.Conns), "GetWork miners")
 		}
-		sockets2 = append(sockets2, c)
-	}
-	log.Dev("sendJobToWebsocket: going from", len(s.Conns), "to", len(sockets2), "getwork miners")
-	s.Conns = sockets2
 
-	if len(s.Conns) > 0 {
-		log.Info("Sending job to", len(s.Conns), "GetWork miners")
-	}
-	s.Unlock()
+	}()
 
 	// send jobs to the remaining sockets
 
