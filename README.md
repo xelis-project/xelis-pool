@@ -2,7 +2,29 @@
 Open-source, high performance XELIS mining pool.
 Originally written from scratch in Go by [XelPool](https://XelPool.com/), it's now Free Software.
 
-## Example configuration
+## Setting up
+
+### Brief introduction
+
+XELIS-POOL has two binaries: the `master` and the `slave`.
+The master processes share information, calculates rewards, and payouts.
+The slave can be run multiple times (one for each geographical location).
+All the slaves connect to the same master. It handles miner connections and shares.
+
+### Set up the pool
+
+First, build the pool software. Make sure you have Go installed, then run the script `build.sh`.
+
+Copy the master binary to the server where you want to host the master, and the slave binary in the server(s) where you want to host the slave.
+
+In all the servers run the XELIS daemon. In the server where you host the master, also run the XELIS wallet.
+
+Modify the example configuration provided below to your needs. You **MUST** set MasterPass to a secure password value (possibly randomly generated).
+MasterPass is used for encrypting the connection between master and slaves. It must be the same in all your nodes.
+
+Then insert the configuration file in the folders which have the binaries.
+
+### Example configuration
 
 ```jsonc
 {
