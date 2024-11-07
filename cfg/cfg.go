@@ -89,8 +89,10 @@ type Slave struct {
 }
 
 type Master struct {
+	ApiPort      uint16
+	ApiUrlPrefix string
+
 	Port       uint16
-	ApiPort    uint16
 	FeePercent float64
 
 	MinWithdrawal float64

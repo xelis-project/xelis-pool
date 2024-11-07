@@ -65,11 +65,13 @@ func StartApiServer() {
 
 	r.Use(cors())
 
-	r.GET("/ping", func(c *gin.Context) {
+	prefix := cfg.Cfg.Master.ApiUrlPrefix
+
+	r.GET(prefix+"/ping", func(c *gin.Context) {
 		c.String(200, "pong")
 	})
 
-	r.GET("/ministats", func(c *gin.Context) {
+	r.GET(prefix+"/ministats", func(c *gin.Context) {
 		c.Header("Cache-Control", "max-age=10")
 
 		Stats.RLock()
@@ -86,7 +88,7 @@ func StartApiServer() {
 
 	})
 
-	r.GET("/stats", func(c *gin.Context) {
+	r.GET(prefix+"/stats", func(c *gin.Context) {
 		c.Header("Cache-Control", "max-age=10")
 
 		MasterInfo.RLock()
@@ -160,7 +162,7 @@ func StartApiServer() {
 		c.JSON(200, x)
 	})
 
-	r.GET("/stats/:addr", func(c *gin.Context) {
+	r.GET(prefix+"/stats/:addr", func(c *gin.Context) {
 		c.Header("Cache-Control", "max-age=10")
 
 		addrSpl := strings.Split(c.Param("addr"), "+")
@@ -238,7 +240,7 @@ func StartApiServer() {
 		})
 	})
 
-	r.GET("/info", func(c *gin.Context) {
+	r.GET(prefix+"/info", func(c *gin.Context) {
 		c.Header("Cache-Control", "max-age=3600")
 		c.JSON(200, gin.H{
 			"pool_fee_percent":  cfg.Cfg.Master.FeePercent,
@@ -246,7 +248,7 @@ func StartApiServer() {
 		})
 	})
 
-	r.GET("/admin/:pass/backup", func(ctx *gin.Context) {
+	r.GET(prefix+"/admin/:pass/backup", func(ctx *gin.Context) {
 		pass := ctx.Param("pass")
 		if pass != cfg.Cfg.MasterPass {
 			ctx.String(404, "404")
@@ -265,7 +267,7 @@ func StartApiServer() {
 		}
 	})
 
-	r.GET("/admin/:pass/withdrawals", func(ctx *gin.Context) {
+	r.GET(prefix+"/admin/:pass/withdrawals", func(ctx *gin.Context) {
 		pass := ctx.Param("pass")
 		if pass != cfg.Cfg.MasterPass {
 			ctx.String(404, "404")
@@ -278,7 +280,7 @@ func StartApiServer() {
 		ctx.JSON(200, Stats.RecentWithdrawals)
 	})
 
-	r.GET("/admin/:pass/", func(ctx *gin.Context) {
+	r.GET(prefix+"/admin/:pass/", func(ctx *gin.Context) {
 		pass := ctx.Param("pass")
 		if pass != cfg.Cfg.MasterPass {
 			ctx.String(404, "404")
