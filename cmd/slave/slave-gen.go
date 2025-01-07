@@ -361,8 +361,8 @@ func handleConnPacket(cdat *server.CData, str string, packetsRecv int, ip string
 						cdat.Unlock()
 
 						err := fmt.Errorf("invalid pow hash: %x, expected %x", powHash, pow)
-
 						log.Warn(err)
+						return
 					}
 				} else {
 					log.Debugf("skipping share check (trust score %d)", cfg.Cfg.Slave.TrustScore)
