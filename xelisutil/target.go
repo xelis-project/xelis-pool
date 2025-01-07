@@ -56,5 +56,5 @@ func GetTargetBytes(diff uint64) [32]byte {
 func CheckDiff(hash [32]byte, diff uint64) bool {
 	target := GetTargetBytes(diff)
 
-	return bytes.Compare(hash[:], target[:]) < 0
+	return bytes.Compare(hash[:], target[:]) <= 0
 }
