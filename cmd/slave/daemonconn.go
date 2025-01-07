@@ -100,9 +100,7 @@ func getworkConn(srv *server.Server, srvgw *GetworkServer, srvstr *StratumServer
 		}
 
 		job.Algorithm = strings.ToLower(job.Algorithm)
-		if job.Algorithm == "v1" || job.Algorithm == "xel/v1" || job.Algorithm == "" {
-			job.Algorithm = "xel/0"
-		} else if job.Algorithm == "v2" || job.Algorithm == "xel/v2" {
+		if job.Algorithm == "v2" || job.Algorithm == "xel/v2" {
 			job.Algorithm = "xel/1"
 		} else {
 			err := fmt.Errorf("unknown algorithm received: %s", job.Algorithm)

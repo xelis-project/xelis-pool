@@ -131,7 +131,7 @@ func StartApiServer() {
 
 		x := gin.H{
 			"pool_hr":             Stats.PoolHashrate,
-			"net_hr":              netHr, // TODO: division by 32 is a hacky fix
+			"net_hr":              netHr,
 			"connected_addresses": len(Stats.KnownAddresses),
 			"connected_workers":   Stats.Workers,
 			"chart": gin.H{
