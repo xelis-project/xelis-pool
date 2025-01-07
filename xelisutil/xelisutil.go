@@ -17,9 +17,9 @@ package xelisutil
 
 import (
 	"runtime"
+	"xelpool/log"
 
 	"github.com/xelpool/xelishash"
-
 	"github.com/zeebo/blake3"
 )
 
@@ -37,16 +37,8 @@ func PowHash(d []byte, algo string) [32]byte {
 	if algo == "xel/1" {
 		return PowHashV2(d)
 	}
-	return PowHashV1(d)
-}
-func PowHashV1(d []byte) [32]byte {
-	if len(d) > xelishash.BYTES_ARRAY_INPUT {
-		panic("PowHash input is too long")
-	}
-	buf := make([]byte, xelishash.BYTES_ARRAY_INPUT)
-	copy(buf, d)
-	data := threadpool.XelisHash(buf)
-	return data
+	log.Err("V1 hash is disabled in source code")
+	return [32]byte(maxBigInt.Bytes())
 }
 func PowHashV2(d []byte) [32]byte {
 	data := threadpool.XelisHashV2(d)
