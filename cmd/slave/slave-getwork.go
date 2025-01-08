@@ -73,7 +73,7 @@ func fmtMessageType(mt int) string {
 }
 
 // sends a job to all the websockets, and removes old websockets
-func (s *GetworkServer) sendGetworkJobs(diff uint64, blob xelisutil.BlockMiner) {
+func (s *GetworkServer) sendGetworkJobs(diff uint64, blob xelisutil.BlockMiner, algo string) {
 	sockets2 := make([]*GetworkConn, 0)
 	func() {
 		s.Lock()
@@ -123,7 +123,7 @@ func (s *GetworkServer) sendGetworkJobs(diff uint64, blob xelisutil.BlockMiner) 
 			c.CData.Lock()
 			defer c.CData.Unlock()
 
-			err := SendJobGetwork(c, diff, blob)
+			err := SendJobGetwork(c, diff, blob, algo)
 
 			// if write failed, close the connection (if it isn't already closed)
 			if err != nil {
@@ -283,10 +283,11 @@ func (s *GetworkServer) wsHandler(c *GetworkConn, w http.ResponseWriter, r *http
 
 	firstJobDiff := LastKnownJob.Diff
 	firstJobBlob := LastKnownJob.Blob
+	firstJobAlgo := LastKnownJob.Algo
 
 	MutLastJob.Unlock()
 
-	err = SendJobGetwork(c, firstJobDiff, firstJobBlob)
+	err = SendJobGetwork(c, firstJobDiff, firstJobBlob, firstJobAlgo)
 
 	c.CData.Unlock()
 
@@ -389,13 +390,17 @@ func (s *GetworkServer) wsHandler(c *GetworkConn, w http.ResponseWriter, r *http
 
 		if jobToSend.Diff != 0 {
 			log.Debug("jobToSend has diff", jobToSend.Diff)
-			SendJobGetwork(c, jobToSend.Diff, jobToSend.BM)
+			SendJobGetwork(c, jobToSend.Diff, jobToSend.BM, firstJobAlgo)
 		}
 	}
 }
 
 // NOTE: Connection MUST be locked before calling this
-func SendJobGetwork(v *GetworkConn, blockDiff uint64, blob xelisutil.BlockMiner) error {
+func SendJobGetwork(v *GetworkConn, blockDiff uint64, blob xelisutil.BlockMiner, algo string) error {
+	if algo == "xel/1" {
+		algo = "xel/v2"
+	}
+
 	log.Debug("SendJobGetwork blockDiff", blockDiff)
 
 	diff := uint64(v.CData.GetNextDiff())
@@ -421,10 +426,12 @@ func SendJobGetwork(v *GetworkConn, blockDiff uint64, blob xelisutil.BlockMiner)
 
 	log.Devf("sending job to Getwork miner with IP %s (extra nonce %x)", v.IP, extraNonce)
 	return v.WriteJSON(map[string]any{
-		"new_job": BlockTemplate{
-			Difficulty: strconv.FormatUint(diff, 10),
-			TopoHeight: 0,
-			Template:   hex.EncodeToString(blob[:]),
+		"new_job": map[string]any{
+			"difficulty": strconv.FormatUint(diff, 10),
+			"height":     0,
+			"topoheight": 0,
+			"miner_work": hex.EncodeToString(blob[:]),
+			"algorithm":  algo,
 		},
 	})
 }

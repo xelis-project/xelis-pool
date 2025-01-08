@@ -100,7 +100,7 @@ func getworkConn(srv *server.Server, srvgw *GetworkServer, srvstr *StratumServer
 		}
 
 		job.Algorithm = strings.ToLower(job.Algorithm)
-		if job.Algorithm == "v2" || job.Algorithm == "xel/v2" {
+		if job.Algorithm == "xel/v2" {
 			job.Algorithm = "xel/1"
 		} else {
 			err := fmt.Errorf("unknown algorithm received: %s", job.Algorithm)
@@ -123,7 +123,7 @@ func getworkConn(srv *server.Server, srvgw *GetworkServer, srvstr *StratumServer
 		bl := xelisutil.BlockMiner(blob)
 
 		go sendJobs(srv, diff, bl)
-		go srvgw.sendGetworkJobs(diff, bl)
+		go srvgw.sendGetworkJobs(diff, bl, job.Algorithm)
 		go srvstr.sendJobs(diff, bl)
 
 		MutLastJob.Lock()

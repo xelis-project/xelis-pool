@@ -2,7 +2,7 @@
 	"LogLevel": 3,
 	"MasterPass": "exampleMasterPassword",
 	"Atomic": 8,
-	"PoolAddress": "xel:2p56mrrqhrvzrnd79sa40h7kgr3f0jrnty4g87akzghaymxmg4lqq45j97r",
+	"PoolAddress": "xet:sfvczzkh9ma8pm6y0r0krxvrmycvnftevxepshc2x747wjzhd48sq66yh5r",
 	"FeeAddress": "xel:2samc3f3ghrzsts6ql2gn3uxgher9w92rcmcmtlywtnjngjtudvsqaawa6l",
 	"BlockTime": 15,
 	"AddressPrefix": "xel",

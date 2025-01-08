@@ -314,7 +314,7 @@ func handleConnPacket(cdat *server.CData, str string, packetsRecv int, ip string
 
 				powHash = pow[:]
 
-				log.Debugf("computed Forced PoW in %v, result %x", time.Since(t).String(), pow)
+				log.Debugf("computed Forced PoW in %s, result %x", time.Since(t), pow)
 			}
 
 			if [32]byte(powHash) == [32]byte{} {
@@ -331,6 +331,7 @@ func handleConnPacket(cdat *server.CData, str string, packetsRecv int, ip string
 					cdat.Unlock()
 				}
 
+				log.Debug(hex.EncodeToString(bm[:]))
 				log.Debug(bm.ToString())
 
 				return
