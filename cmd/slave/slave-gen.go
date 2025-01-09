@@ -410,6 +410,9 @@ func handleConnPacket(cdat *server.CData, str string, packetsRecv int, ip string
 						time.Sleep(5 * time.Second)
 						err = SubmitBlock(hex.EncodeToString(bm[:]))
 						log.Err("block resubmit attempt:", err)
+						if err != nil {
+							slave.SendBlockFound(bm.Hash())
+						}
 					}()
 
 					return
