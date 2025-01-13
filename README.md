@@ -53,7 +53,7 @@ Then insert the configuration file in the folders which have the binaries.
 		"WalletRpcUser": "user",
 		"WalletRpcPass": "your wallet rpc password here",
 
-		"MinConfs": 4,
+		"MinConfs": 40,
 
 		"Port": 3221,
 		"ApiPort": 4006,
