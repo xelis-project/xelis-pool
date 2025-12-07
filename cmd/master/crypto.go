@@ -18,7 +18,7 @@ package main
 import (
 	"crypto/rand"
 	"fmt"
-	"xelpool/cfg"
+	"xelis-pool/cfg"
 
 	"golang.org/x/crypto/chacha20poly1305"
 )

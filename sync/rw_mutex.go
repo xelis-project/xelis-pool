@@ -16,7 +16,7 @@
 package sync
 
 import (
-	"xelpool/log"
+	"xelis-pool/log"
 
 	sync "github.com/sasha-s/go-deadlock"
 )

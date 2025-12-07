@@ -21,12 +21,12 @@ import (
 	"runtime/pprof"
 	"syscall"
 	"time"
-	"xelpool/cfg"
-	"xelpool/config"
-	"xelpool/log"
-	"xelpool/slave"
-	"xelpool/xatum"
-	"xelpool/xatum/server"
+	"xelis-pool/cfg"
+	"xelis-pool/config"
+	"xelis-pool/log"
+	"xelis-pool/slave"
+	"xelis-pool/xatum"
+	"xelis-pool/xatum/server"
 )
 
 const PPROF = false

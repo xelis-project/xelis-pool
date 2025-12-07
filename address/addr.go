@@ -16,8 +16,8 @@
 package address
 
 import (
-	"xelpool/cfg"
-	"xelpool/log"
+	"xelis-pool/cfg"
+	"xelis-pool/log"
 
 	"github.com/xelis-project/xelis-go-sdk/address"
 )

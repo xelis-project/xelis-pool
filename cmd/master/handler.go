@@ -21,9 +21,9 @@ import (
 	"io"
 	"net"
 	"time"
-	"xelpool/log"
-	"xelpool/serializer"
-	"xelpool/util"
+	"xelis-pool/log"
+	"xelis-pool/serializer"
+	"xelis-pool/util"
 )
 
 const Overhead = 40

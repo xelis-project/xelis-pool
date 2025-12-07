@@ -18,8 +18,8 @@ package main
 import (
 	"strings"
 	"time"
-	"xelpool/cfg"
-	"xelpool/log"
+	"xelis-pool/cfg"
+	"xelis-pool/log"
 
 	"github.com/disgoorg/disgo/discord"
 	"github.com/xelis-project/xelis-go-sdk/daemon"

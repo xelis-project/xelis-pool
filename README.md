@@ -1,5 +1,6 @@
 # XELIS-POOL
 Open-source, high performance XELIS mining pool.
+
 Originally written from scratch in Go by [XelPool](https://XelPool.com/), it's now Free Software.
 
 ## Setting up

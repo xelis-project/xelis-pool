@@ -17,7 +17,7 @@ package config
 
 import (
 	"crypto/rand"
-	"xelpool/log"
+	"xelis-pool/log"
 )
 
 var Verbose bool

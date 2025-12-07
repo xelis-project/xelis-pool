@@ -15,7 +15,7 @@
 
 package main
 
-import "xelpool/cfg"
+import "xelis-pool/cfg"
 
 // returns the current PPLNS window duration in seconds
 // Stats MUST be Rlocked before calling this

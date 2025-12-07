@@ -22,9 +22,9 @@ import (
 	"net"
 	"sync"
 	"time"
-	"xelpool/cfg"
-	"xelpool/log"
-	"xelpool/serializer"
+	"xelis-pool/cfg"
+	"xelis-pool/log"
+	"xelis-pool/serializer"
 
 	"golang.org/x/crypto/chacha20poly1305"
 )

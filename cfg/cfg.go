@@ -20,7 +20,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"xelpool/log"
+	"xelis-pool/log"
 )
 
 var Cfg Config

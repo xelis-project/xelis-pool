@@ -21,8 +21,8 @@ import (
 	"os"
 	"sync"
 	"time"
-	"xelpool/log"
-	"xelpool/util"
+	"xelis-pool/log"
+	"xelis-pool/util"
 
 	"github.com/xelis-project/xelis-go-sdk/wallet"
 )

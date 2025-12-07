@@ -22,8 +22,8 @@ import (
 	"net"
 	"strings"
 	"sync"
-	"xelpool/log"
-	"xelpool/xatum"
+	"xelis-pool/log"
+	"xelis-pool/xatum"
 )
 
 type Client struct {

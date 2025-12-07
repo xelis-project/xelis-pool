@@ -18,7 +18,7 @@ package rate_limit
 import (
 	"sync"
 	"time"
-	"xelpool/log"
+	"xelis-pool/log"
 )
 
 // max score of 2000 per minute

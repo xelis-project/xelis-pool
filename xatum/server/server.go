@@ -22,12 +22,12 @@ import (
 	"strconv"
 	"sync"
 	"time"
-	"xelpool/cfg"
-	"xelpool/log"
-	"xelpool/pow"
-	rate_limit "xelpool/rate_limit"
-	"xelpool/util"
-	"xelpool/xatum"
+	"xelis-pool/cfg"
+	"xelis-pool/log"
+	"xelis-pool/pow"
+	rate_limit "xelis-pool/rate_limit"
+	"xelis-pool/util"
+	"xelis-pool/xatum"
 )
 
 type Server struct {

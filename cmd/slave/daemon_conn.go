@@ -22,13 +22,13 @@ import (
 	"strconv"
 	"sync"
 	"time"
-	"xelpool/cfg"
-	"xelpool/config"
-	"xelpool/log"
-	"xelpool/pow"
-	"xelpool/rate_limit"
-	"xelpool/xatum"
-	"xelpool/xatum/server"
+	"xelis-pool/cfg"
+	"xelis-pool/config"
+	"xelis-pool/log"
+	"xelis-pool/pow"
+	"xelis-pool/rate_limit"
+	"xelis-pool/xatum"
+	"xelis-pool/xatum/server"
 
 	"github.com/xelis-project/xelis-go-sdk/getwork"
 )
@@ -68,7 +68,7 @@ func SubmitBlock(hexData string) error {
 func getworkConn(srv *server.Server, srvgw *GetworkServer, srvstr *StratumServer) {
 	log.Debug("getworkConn")
 
-	gw, err := getwork.NewGetwork("ws://"+cfg.Cfg.Master.DaemonRpc+"/getwork", cfg.Cfg.PoolAddress, "xelpool")
+	gw, err := getwork.NewGetwork("ws://"+cfg.Cfg.Master.DaemonRpc+"/getwork", cfg.Cfg.PoolAddress, "xelis-pool")
 	if err != nil {
 		log.Err(err)
 		time.Sleep(time.Second)

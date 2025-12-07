@@ -18,11 +18,11 @@ package main
 import (
 	"bufio"
 	"time"
-	"xelpool/config"
-	"xelpool/log"
-	"xelpool/util"
-	"xelpool/xatum"
-	"xelpool/xatum/server"
+	"xelis-pool/config"
+	"xelis-pool/log"
+	"xelis-pool/util"
+	"xelis-pool/xatum"
+	"xelis-pool/xatum/server"
 )
 
 func handleXatumConns(s *server.Server) {

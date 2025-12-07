@@ -15,7 +15,7 @@
 
 package database
 
-import "xelpool/serializer"
+import "xelis-pool/serializer"
 
 type Share struct {
 	Wallet string `json:"wall"`

@@ -18,7 +18,7 @@ package pow
 import (
 	"bytes"
 	"math/big"
-	"xelpool/util"
+	"xelis-pool/util"
 )
 
 var maxBigInt *big.Int

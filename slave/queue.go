@@ -18,8 +18,8 @@ package slave
 import (
 	"sync"
 	"time"
-	"xelpool/log"
-	"xelpool/serializer"
+	"xelis-pool/log"
+	"xelis-pool/serializer"
 )
 
 type ShareCache struct {

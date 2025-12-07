@@ -16,8 +16,8 @@
 package main
 
 import (
-	"xelpool/cfg"
-	"xelpool/log"
+	"xelis-pool/cfg"
+	"xelis-pool/log"
 
 	"github.com/disgoorg/disgo/webhook"
 )

@@ -17,7 +17,7 @@ package rate_limit
 
 import (
 	"sync"
-	"xelpool/config"
+	"xelis-pool/config"
 )
 
 var connsPerIp = make(map[string]uint32, 100)
