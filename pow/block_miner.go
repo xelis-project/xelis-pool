@@ -13,7 +13,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-package xelisutil
+package pow
 
 import (
 	"encoding/binary"
@@ -97,7 +97,7 @@ func (b BlockMiner) Serialize() []byte {
 func (b BlockMiner) Hash() [32]byte {
 	return FastHash(b[:])
 }
-func (b BlockMiner) PowHash(algo string) [32]byte {
+func (b BlockMiner) PowHash(algo string) ([32]byte, error) {
 	return PowHash(b[:], algo)
 }
 

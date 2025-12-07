@@ -13,7 +13,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-package ratelimit
+package rate_limit
 
 import (
 	"sync"
@@ -42,10 +42,10 @@ const BAN_DURATION = 5 * 60
 
 // rate limiters per IP
 var rlMut sync.RWMutex
-var rateLimiters = make(map[string]rateLimiter, 500)
+var rate_limiters = make(map[string]rate_limiter, 500)
 var bans = make(map[string]ban, 10)
 
-type rateLimiter struct {
+type rate_limiter struct {
 	Score uint32
 }
 type ban struct {
@@ -65,10 +65,10 @@ func CanDoAction(ip string, requiredScore uint32) bool {
 	rlMut.Lock()
 	defer rlMut.Unlock()
 
-	log.Debug("rate limit score", rateLimiters[ip].Score, "/", MAX_SCORE)
+	log.Debug("rate limit score", rate_limiters[ip].Score, "/", MAX_SCORE)
 
-	rateLimiters[ip] = rateLimiter{
-		Score: rateLimiters[ip].Score + requiredScore,
+	rate_limiters[ip] = rate_limiter{
+		Score: rate_limiters[ip].Score + requiredScore,
 	}
 
 	t := time.Now().Unix()
@@ -77,7 +77,7 @@ func CanDoAction(ip string, requiredScore uint32) bool {
 		return false
 	}
 
-	if rateLimiters[ip].Score > MAX_SCORE {
+	if rate_limiters[ip].Score > MAX_SCORE {
 		bans[ip] = ban{
 			Ends: t + BAN_DURATION,
 		}
@@ -103,7 +103,7 @@ func clearRl() {
 	defer rlMut.Unlock()
 
 	// clear rate limiters
-	rateLimiters = make(map[string]rateLimiter, len(rateLimiters))
+	rate_limiters = make(map[string]rate_limiter, len(rate_limiters))
 
 	// clear outdated bans
 	t := time.Now().Unix()

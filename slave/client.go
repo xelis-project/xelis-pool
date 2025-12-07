@@ -20,17 +20,17 @@ import (
 	"encoding/binary"
 	"io"
 	"net"
+	"sync"
 	"time"
 	"xelpool/cfg"
 	"xelpool/log"
-	"xelpool/mut"
 	"xelpool/serializer"
 
 	"golang.org/x/crypto/chacha20poly1305"
 )
 
 var conn net.Conn
-var connMut mut.RWMutex
+var connMut sync.RWMutex
 
 const Overhead = 40
 

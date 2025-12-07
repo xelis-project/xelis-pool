@@ -20,17 +20,15 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
-	"strings"
+	"sync"
 	"time"
 	"xelpool/cfg"
 	"xelpool/config"
 	"xelpool/log"
-	"xelpool/ratelimit"
+	"xelpool/pow"
+	"xelpool/rate_limit"
 	"xelpool/xatum"
 	"xelpool/xatum/server"
-	"xelpool/xelisutil"
-
-	"xelpool/mut"
 
 	"github.com/xelis-project/xelis-go-sdk/getwork"
 )
@@ -44,17 +42,17 @@ func handleDaemon(srv *server.Server, srvgw *GetworkServer, srvstr *StratumServe
 
 // MemJob is a fast & efficient struct used for storing a job in memory
 type MemJob struct {
-	Blob   xelisutil.BlockMiner
-	Diff   uint64
-	Height uint64
-	Algo   string
+	Blob      pow.BlockMiner
+	Diff      uint64
+	Height    uint64
+	Algorithm string
 }
 
 var gwConn *getwork.Getwork
-var gwMut mut.RWMutex
+var gwMut sync.RWMutex
 
 var LastKnownJob MemJob
-var MutLastJob mut.RWMutex
+var MutLastJob sync.RWMutex
 
 func SubmitBlock(hexData string) error {
 	gwMut.Lock()
@@ -99,10 +97,8 @@ func getworkConn(srv *server.Server, srvgw *GetworkServer, srvstr *StratumServer
 			continue
 		}
 
-		job.Algorithm = strings.ToLower(job.Algorithm)
-		if job.Algorithm == "xel/v2" {
-			job.Algorithm = "xel/1"
-		} else {
+		job.Algorithm, err = pow.ConvertAlgorithmToStratum(job.Algorithm)
+		if err != nil {
 			err := fmt.Errorf("unknown algorithm received: %s", job.Algorithm)
 			log.Fatal(err)
 		}
@@ -110,8 +106,8 @@ func getworkConn(srv *server.Server, srvgw *GetworkServer, srvstr *StratumServer
 		log.Infof("new job: height %d blob %s diff %s algo %s", job.Height, job.Template, job.Difficulty,
 			job.Algorithm)
 
-		if len(blob) != xelisutil.BLOCKMINER_LENGTH {
-			log.Warnf("blob is not %d bytes long", xelisutil.BLOCKMINER_LENGTH)
+		if len(blob) != pow.BLOCKMINER_LENGTH {
+			log.Warnf("blob is not %d bytes long", pow.BLOCKMINER_LENGTH)
 			continue
 		}
 		diff, err := strconv.ParseUint(job.Difficulty, 10, 64)
@@ -120,7 +116,7 @@ func getworkConn(srv *server.Server, srvgw *GetworkServer, srvstr *StratumServer
 			continue
 		}
 
-		bl := xelisutil.BlockMiner(blob)
+		bl := pow.BlockMiner(blob)
 
 		go sendJobs(srv, diff, bl)
 		go srvgw.sendGetworkJobs(diff, bl, job.Algorithm)
@@ -128,17 +124,17 @@ func getworkConn(srv *server.Server, srvgw *GetworkServer, srvstr *StratumServer
 
 		MutLastJob.Lock()
 		LastKnownJob = MemJob{
-			Blob:   bl,
-			Diff:   diff,
-			Height: job.Height,
-			Algo:   job.Algorithm,
+			Blob:      bl,
+			Diff:      diff,
+			Height:    job.Height,
+			Algorithm: job.Algorithm,
 		}
 		MutLastJob.Unlock()
 	}
 }
 
 // NOTE: Connection MUST be locked before calling this
-func SendJob(v *server.Connection, blockDiff uint64, blob xelisutil.BlockMiner) {
+func SendJob(v *server.Connection, blockDiff uint64, blob pow.BlockMiner) {
 	log.Debug("SendJob to miner with IP", v.Conn.RemoteAddr().String())
 
 	diff := uint64(v.CData.GetNextDiff())
@@ -169,7 +165,7 @@ func SendJob(v *server.Connection, blockDiff uint64, blob xelisutil.BlockMiner) 
 	})
 }
 
-func sendJobs(srv *server.Server, diff uint64, blob xelisutil.BlockMiner) {
+func sendJobs(srv *server.Server, diff uint64, blob pow.BlockMiner) {
 	log.Info("sendJobs: sending jobs to", len(srv.Connections), "peers")
 
 	srv.Lock()
@@ -195,7 +191,7 @@ func sendJobs(srv *server.Server, diff uint64, blob xelisutil.BlockMiner) {
 
 				ip := v.Conn.RemoteAddr().String()
 
-				ratelimit.Ban(ip, time.Now().Unix()+(5*60))
+				rate_limit.Ban(ip, time.Now().Unix()+(5*60))
 
 				v.Send(xatum.PacketS2C_Print, xatum.S2C_Print{
 					Msg: "no recent share received",

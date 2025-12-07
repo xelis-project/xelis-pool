@@ -1,8 +1,8 @@
 module xelpool
 
-go 1.23
+go 1.24.0
 
-toolchain go1.23.4
+toolchain go1.24.11
 
 require (
 	github.com/disgoorg/disgo v0.18.14
@@ -11,7 +11,7 @@ require (
 	github.com/gorilla/websocket v1.5.3
 	github.com/sasha-s/go-deadlock v0.3.5
 	github.com/xelis-project/xelis-go-sdk v0.4.6
-	github.com/xelpool/xelishash v1.6.1
+	github.com/xelis-project/xelis-hash/go v1.0.0
 	github.com/zeebo/blake3 v0.2.4
 	go.etcd.io/bbolt v1.3.11
 	golang.org/x/crypto v0.32.0
@@ -47,10 +47,11 @@ require (
 	golang.org/x/arch v0.13.0 // indirect
 	golang.org/x/net v0.34.0 // indirect
 	golang.org/x/sync v0.10.0 // indirect
-	golang.org/x/sys v0.29.0 // indirect
+	golang.org/x/sys v0.38.0 // indirect
 	golang.org/x/text v0.21.0 // indirect
 	google.golang.org/protobuf v1.36.2 // indirect
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
+	lukechampine.com/blake3 v1.2.1 // indirect
 	lukechampine.com/uint128 v1.3.0 // indirect
 )

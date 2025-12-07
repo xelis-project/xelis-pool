@@ -30,12 +30,12 @@ import (
 	"xelpool/cfg"
 	"xelpool/config"
 	"xelpool/log"
-	"xelpool/ratelimit"
+	"xelpool/pow"
+	"xelpool/rate_limit"
 	"xelpool/stratum"
 	"xelpool/util"
 	"xelpool/xatum"
 	"xelpool/xatum/server"
-	"xelpool/xelisutil"
 )
 
 type StratumServer struct {
@@ -126,12 +126,12 @@ func handleStratumConns(s *StratumServer) {
 		}
 
 		ip := util.RemovePort(Conn.RemoteAddr().String())
-		if !ratelimit.CanDoAction(ip, ratelimit.ACTION_CONNECT) {
+		if !rate_limit.CanDoAction(ip, rate_limit.ACTION_CONNECT) {
 			log.Warn("Stratum miner", ip, "connect rate limited")
 			Conn.Close()
 			continue
 		}
-		if !ratelimit.CanConnect(ip) {
+		if !rate_limit.CanConnect(ip) {
 			log.Warn("Stratum miner", ip, "too many open connections")
 			Conn.Close()
 			continue
@@ -379,7 +379,7 @@ func handleStratumConn(_ *StratumServer, c *StratumConn) {
 
 			c.CData.Lock()
 
-			var bm xelisutil.BlockMiner
+			var bm pow.BlockMiner
 
 			for _, v := range c.CData.Jobs {
 				if v.BlockMiner.GetJobID() == [16]byte(jobid) {
@@ -477,7 +477,7 @@ func (c *StratumConn) SendDifficulty(diff uint64) error {
 	})
 }
 
-func (c *StratumConn) SendJob(bm xelisutil.BlockMiner) error {
+func (c *StratumConn) SendJob(bm pow.BlockMiner) error {
 	c.LastOutID++
 
 	jobid := bm.GetJobID()
@@ -497,7 +497,7 @@ func (c *StratumConn) SendJob(bm xelisutil.BlockMiner) error {
 	c.LastOutID++*/
 
 	MutLastJob.RLock()
-	algo := LastKnownJob.Algo
+	algo := LastKnownJob.Algorithm
 	MutLastJob.RUnlock()
 
 	return c.WriteJSON(stratum.RequestOut{
@@ -513,7 +513,7 @@ func (c *StratumConn) SendJob(bm xelisutil.BlockMiner) error {
 	})
 }
 
-func SendStratumJob(v *StratumConn, blockDiff uint64, blob xelisutil.BlockMiner) {
+func SendStratumJob(v *StratumConn, blockDiff uint64, blob pow.BlockMiner) {
 	log.Debug("SendJob to Stratum miner with IP", v.Conn.RemoteAddr().String())
 
 	diff := uint64(v.CData.GetNextDiff())
@@ -557,7 +557,7 @@ func SendStratumJob(v *StratumConn, blockDiff uint64, blob xelisutil.BlockMiner)
 }
 
 // sends a job to all the websockets, and removes old websockets
-func (s *StratumServer) sendJobs(diff uint64, blob xelisutil.BlockMiner) {
+func (s *StratumServer) sendJobs(diff uint64, blob pow.BlockMiner) {
 	s.Lock()
 	log.Dev("StratumServer sendJobs: num sockets:", len(s.Conns))
 
@@ -573,7 +573,7 @@ func (s *StratumServer) sendJobs(diff uint64, blob xelisutil.BlockMiner) {
 			log.Debug("connection with IP", c.IP, "disconnected")
 
 			// DDoS protection disconnect
-			ratelimit.Disconnect(c.IP)
+			rate_limit.Disconnect(c.IP)
 
 			continue
 		}

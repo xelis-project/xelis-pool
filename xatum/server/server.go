@@ -24,11 +24,10 @@ import (
 	"time"
 	"xelpool/cfg"
 	"xelpool/log"
-	"xelpool/mut"
-	"xelpool/ratelimit"
+	"xelpool/pow"
+	rate_limit "xelpool/rate_limit"
 	"xelpool/util"
 	"xelpool/xatum"
-	"xelpool/xelisutil"
 )
 
 type Server struct {
@@ -36,7 +35,7 @@ type Server struct {
 
 	NewConnections chan *Connection
 
-	mut.RWMutex
+	sync.RWMutex
 }
 
 type Connection struct {
@@ -66,7 +65,7 @@ func NewCData() CData {
 }
 
 func (c *CData) LastJob() ConnJob {
-	if c.Jobs == nil || len(c.Jobs) == 0 {
+	if len(c.Jobs) == 0 {
 		return ConnJob{}
 	}
 
@@ -98,7 +97,7 @@ type ConnJob struct {
 	Diff      uint64
 	ChainDiff uint64
 
-	BlockMiner xelisutil.BlockMiner
+	BlockMiner pow.BlockMiner
 
 	SubmittedNonces []uint64
 }
@@ -165,7 +164,7 @@ func (s *Server) Start(port uint16) {
 
 		log.Debug("new incoming connection with IP", minerIp)
 
-		if !ratelimit.CanDoAction(minerIp, ratelimit.ACTION_CONNECT) {
+		if !rate_limit.CanDoAction(minerIp, rate_limit.ACTION_CONNECT) {
 			log.Warn("miner", minerIp, "connect rate limited")
 			c.Close()
 			continue
@@ -193,7 +192,7 @@ func (s *Server) Kick(id uint64) {
 
 			ipAddr := util.RemovePort(v.Conn.RemoteAddr().String())
 
-			ratelimit.Disconnect(ipAddr)
+			rate_limit.Disconnect(ipAddr)
 		} else {
 			connectionsNew = append(connectionsNew, v)
 		}
@@ -210,7 +209,7 @@ func (srv *Server) handleConnection(conn *Connection) {
 
 	ipAddr := util.RemovePort(conn.Conn.RemoteAddr().String())
 
-	if !ratelimit.CanConnect(ipAddr) {
+	if !rate_limit.CanConnect(ipAddr) {
 		log.Debug("address", ipAddr, "reached connections per IP limit")
 		conn.Conn.Close()
 		return

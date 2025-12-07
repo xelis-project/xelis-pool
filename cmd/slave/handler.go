@@ -29,12 +29,12 @@ import (
 	"xelpool/cfg"
 	"xelpool/config"
 	"xelpool/log"
-	"xelpool/ratelimit"
+	"xelpool/pow"
+	"xelpool/rate_limit"
 	"xelpool/slave"
 	"xelpool/util"
 	"xelpool/xatum"
 	"xelpool/xatum/server"
-	"xelpool/xelisutil"
 )
 
 func GenExtraNonce() (x [32]byte) {
@@ -51,12 +51,12 @@ func GenExtraNonce() (x [32]byte) {
 
 type JobToSend struct {
 	Diff uint64
-	BM   xelisutil.BlockMiner
+	BM   pow.BlockMiner
 }
 
 func handleConnPacket(cdat *server.CData, str string, packetsRecv int, ip string, toSend *JobToSend, minerId [16]byte) (*xatum.S2C_Print, bool, error) {
 	spl := strings.SplitN(str, "~", 2)
-	if spl == nil || len(spl) < 2 {
+	if len(spl) < 2 {
 		log.Warn("packet data is malformed, spl:", spl)
 		return &xatum.S2C_Print{
 			Msg: "malformed packet data",
@@ -73,7 +73,8 @@ func handleConnPacket(cdat *server.CData, str string, packetsRecv int, ip string
 		}, true, errors.New("first packet must be a handshake")
 	}
 
-	if pack == xatum.PacketC2S_Handshake {
+	switch pack {
+	case xatum.PacketC2S_Handshake:
 		if packetsRecv != 1 {
 			return &xatum.S2C_Print{
 				Msg: "more than one handshake received",
@@ -128,11 +129,11 @@ func handleConnPacket(cdat *server.CData, str string, packetsRecv int, ip string
 			}
 		}
 
-		if !slices.Contains(pData.Algos, "xel/0") && !slices.Contains(pData.Algos, "xel/1") {
+		if !slices.Contains(pData.Algos, "xel/0") && !slices.Contains(pData.Algos, "xel/1") && !slices.Contains(pData.Algos, "xel/2") {
 			return &xatum.S2C_Print{
-				Msg: "your miner does not support xel/0 or xel/1 algorithms",
+				Msg: "your miner does not support xel/0, xel/1 or xel/2 algorithms",
 				Lvl: 3,
-			}, true, errors.New("your miner does not support xel/0 or xel/1 algorithms")
+			}, true, errors.New("your miner does not support xel/0, xel/1 or xel/2 algorithms")
 		}
 
 		log.Infof("New miner | Address: %s %s UserAgent: %s Algos: %s", wall, pData.Work, pData.Agent, pData.Algos)
@@ -155,13 +156,13 @@ func handleConnPacket(cdat *server.CData, str string, packetsRecv int, ip string
 		toSend.Diff = diff
 		toSend.BM = blob
 
-	} else if pack == xatum.PacketC2S_Pong {
+	case xatum.PacketC2S_Pong:
 		log.Dev("received pong packet")
-	} else if pack == xatum.PacketC2S_Submit {
+	case xatum.PacketC2S_Submit:
 
 		ipAddr := util.RemovePort(ip)
 
-		if !ratelimit.CanDoAction(ipAddr, ratelimit.ACTION_SHARE_SUBMIT) {
+		if !rate_limit.CanDoAction(ipAddr, rate_limit.ACTION_SHARE_SUBMIT) {
 			return &xatum.S2C_Print{
 				Msg: "too many submit packets",
 				Lvl: 3,
@@ -188,14 +189,14 @@ func handleConnPacket(cdat *server.CData, str string, packetsRecv int, ip string
 		}
 
 		// validate BlockMiner length
-		if len(pData.Data) != xelisutil.BLOCKMINER_LENGTH {
+		if len(pData.Data) != pow.BLOCKMINER_LENGTH {
 			return &xatum.S2C_Print{
 				Msg: "invalid blockminer length",
 				Lvl: 3,
 			}, true, fmt.Errorf("invalid blockminer length")
 		}
 
-		bm := xelisutil.BlockMiner(pData.Data)
+		bm := pow.BlockMiner(pData.Data)
 
 		// validate extra nonce / job id
 		cdat.Lock()
@@ -296,11 +297,7 @@ func handleConnPacket(cdat *server.CData, str string, packetsRecv int, ip string
 
 		go func() {
 			MutLastJob.RLock()
-			algo := LastKnownJob.Algo
-			if algo != "xel/0" && algo != "xel/1" {
-				log.Err("algo is invalid: " + algo + " - setting it to xel/1")
-				algo = "xel/1"
-			}
+			algo := LastKnownJob.Algorithm
 			MutLastJob.RUnlock()
 
 			// validate PoW if forced
@@ -310,7 +307,11 @@ func handleConnPacket(cdat *server.CData, str string, packetsRecv int, ip string
 
 				log.Debug("computing Forced PoW with algo", algo)
 
-				pow := bm.PowHash(algo)
+				pow, err := bm.PowHash(algo)
+				if err != nil {
+					log.Err("failed to compute forced PoW:", err)
+					return
+				}
 
 				powHash = pow[:]
 
@@ -323,7 +324,7 @@ func handleConnPacket(cdat *server.CData, str string, packetsRecv int, ip string
 			}
 
 			// validate difficulty
-			if !xelisutil.CheckDiff([32]byte(powHash), minerJob.Diff) {
+			if !pow.CheckDiff([32]byte(powHash), minerJob.Diff) {
 				log.Warn("hash does not meet target, ForcePowCheck:", ForcePowCheck)
 				if ForcePowCheck {
 					cdat.Lock()
@@ -337,7 +338,7 @@ func handleConnPacket(cdat *server.CData, str string, packetsRecv int, ip string
 				return
 			}
 
-			var findsBlock = xelisutil.CheckDiff([32]byte(powHash), minerJob.ChainDiff)
+			var findsBlock = pow.CheckDiff([32]byte(powHash), minerJob.ChainDiff)
 
 			// validate PoW when not forced on
 
@@ -352,7 +353,11 @@ func handleConnPacket(cdat *server.CData, str string, packetsRecv int, ip string
 
 					t := time.Now()
 
-					pow := bm.PowHash(algo)
+					pow, err := bm.PowHash(algo)
+					if err != nil {
+						log.Err("failed to compute PoW:", err)
+						return
+					}
 
 					log.Debugf("PoW checked in %v algo: %s", time.Since(t).String(), algo)
 
@@ -438,7 +443,7 @@ func handleConnPacket(cdat *server.CData, str string, packetsRecv int, ip string
 			Lvl: 1,
 		}, false, nil
 
-	} else {
+	default:
 		err := fmt.Errorf("unknown packet %s", pack)
 
 		return &xatum.S2C_Print{

@@ -71,14 +71,15 @@ func (cl *Client) Connect() {
 		log.Net("<<<", str)
 
 		spl := strings.SplitN(str, "~", 2)
-		if spl == nil || len(spl) < 2 {
+		if len(spl) < 2 {
 			log.Warn("packet data is malformed")
 			continue
 		}
 
 		pack := spl[0]
 
-		if pack == xatum.PacketS2C_Job {
+		switch pack {
+		case xatum.PacketS2C_Job:
 			pData := xatum.S2C_Job{}
 
 			err := json.Unmarshal([]byte(spl[1]), &pData)
@@ -93,7 +94,7 @@ func (cl *Client) Connect() {
 			cl.Jobs <- pData
 
 			log.Debug("ok, done sending to channel")
-		} else if pack == xatum.PacketS2C_Print {
+		case xatum.PacketS2C_Print:
 			pData := xatum.S2C_Print{}
 			err := json.Unmarshal([]byte(spl[1]), &pData)
 			if err != nil {
@@ -113,9 +114,9 @@ func (cl *Client) Connect() {
 				log.Errf(PREFIX+" %s", pData.Msg)
 			}
 
-		} else if pack == xatum.PacketS2C_Ping {
+		case xatum.PacketS2C_Ping:
 			cl.Send("pong", map[string]any{})
-		} else {
+		default:
 			log.Warnf("Unknown packet %s", pack)
 		}
 

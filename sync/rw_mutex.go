@@ -13,7 +13,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-package mut
+package sync
 
 import (
 	"xelpool/log"
@@ -22,7 +22,7 @@ import (
 )
 
 type RWMutex struct {
-	mut sync.RWMutex
+	mutex sync.RWMutex
 }
 
 var numLock sync.RWMutex
@@ -36,7 +36,7 @@ func (r *RWMutex) Lock() {
 		log.Mutex("Lock!", numLocked)
 		numLock.Unlock()
 	}
-	r.mut.Lock()
+	r.mutex.Lock()
 }
 
 func (r *RWMutex) Unlock() {
@@ -47,7 +47,7 @@ func (r *RWMutex) Unlock() {
 		numLock.Unlock()
 	}
 
-	r.mut.Unlock()
+	r.mutex.Unlock()
 }
 
 func (r *RWMutex) RLock() {
@@ -57,7 +57,7 @@ func (r *RWMutex) RLock() {
 		log.Mutex("RLock!", numRLocked)
 		numLock.Unlock()
 	}
-	r.mut.RLock()
+	r.mutex.RLock()
 }
 
 func (r *RWMutex) RUnlock() {
@@ -68,5 +68,5 @@ func (r *RWMutex) RUnlock() {
 		numLock.Unlock()
 	}
 
-	r.mut.RUnlock()
+	r.mutex.RUnlock()
 }

@@ -13,34 +13,34 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-package xelisutil
+package rate_limit
 
 import (
-	"runtime"
-	"xelpool/log"
-
-	"github.com/xelpool/xelishash"
-	"github.com/zeebo/blake3"
+	"sync"
+	"xelpool/config"
 )
 
-var threadpool *xelishash.ThreadPool
+var connsPerIp = make(map[string]uint32, 100)
+var connsMut sync.RWMutex
 
-func init() {
-	threadpool = xelishash.NewThreadPool(runtime.NumCPU())
-}
+// returns true and increases IP connections by 1 if the miner can connect,
+// otherwise returns false and does not increase number of connections
+func CanConnect(ip string) bool {
+	connsMut.Lock()
+	defer connsMut.Unlock()
 
-func FastHash(d []byte) [32]byte {
-	return blake3.Sum256(d)
-}
-
-func PowHash(d []byte, algo string) [32]byte {
-	if algo == "xel/1" {
-		return PowHashV2(d)
+	if connsPerIp[ip] > config.MAX_CONNECTIONS_PER_IP {
+		return false
 	}
-	log.Err("V1 hash is disabled in source code")
-	return [32]byte(maxBigInt.Bytes())
+	connsPerIp[ip]++
+
+	return true
 }
-func PowHashV2(d []byte) [32]byte {
-	data := threadpool.XelisHashV2(d)
-	return data
+func Disconnect(ip string) {
+	connsMut.Lock()
+	defer connsMut.Unlock()
+
+	if connsPerIp[ip] > 0 {
+		connsPerIp[ip]--
+	}
 }

@@ -16,9 +16,9 @@
 package slave
 
 import (
+	"sync"
 	"time"
 	"xelpool/log"
-	"xelpool/mut"
 	"xelpool/serializer"
 )
 
@@ -30,7 +30,7 @@ type ShareCache struct {
 type Cache struct {
 	Shares map[string]ShareCache
 
-	mut.RWMutex
+	sync.RWMutex
 }
 
 var slaveCache = Cache{

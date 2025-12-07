@@ -27,10 +27,10 @@ import (
 	"xelpool/cfg"
 	"xelpool/config"
 	"xelpool/log"
-	"xelpool/ratelimit"
+	"xelpool/pow"
+	"xelpool/rate_limit"
 	"xelpool/xatum"
 	"xelpool/xatum/server"
-	"xelpool/xelisutil"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
@@ -73,7 +73,7 @@ func fmtMessageType(mt int) string {
 }
 
 // sends a job to all the websockets, and removes old websockets
-func (s *GetworkServer) sendGetworkJobs(diff uint64, blob xelisutil.BlockMiner, algo string) {
+func (s *GetworkServer) sendGetworkJobs(diff uint64, blob pow.BlockMiner, algo string) {
 	sockets2 := make([]*GetworkConn, 0)
 	func() {
 		s.Lock()
@@ -91,7 +91,7 @@ func (s *GetworkServer) sendGetworkJobs(diff uint64, blob xelisutil.BlockMiner, 
 				log.Debug("connection with IP", c.IP, "disconnected")
 
 				// DDoS protection disconnect
-				ratelimit.Disconnect(c.IP)
+				rate_limit.Disconnect(c.IP)
 
 				continue
 			}
@@ -172,14 +172,14 @@ func (s *GetworkServer) listenGetwork() {
 
 	r.GET("/getwork/:addr/*worker", func(c *gin.Context) {
 		// DDoS protection
-		if !ratelimit.CanConnect(c.ClientIP()) {
+		if !rate_limit.CanConnect(c.ClientIP()) {
 			log.Warn("IP", c.ClientIP(), "has too many Getwork connections")
 			c.String(429, "429 too many open connections")
 
 			return
 		}
 
-		if !ratelimit.CanDoAction(c.ClientIP(), ratelimit.ACTION_CONNECT) {
+		if !rate_limit.CanDoAction(c.ClientIP(), rate_limit.ACTION_CONNECT) {
 			log.Warn("IP", c.ClientIP(), "rate limited on Getwork server")
 			c.String(429, "429 too many requests")
 
@@ -283,7 +283,7 @@ func (s *GetworkServer) wsHandler(c *GetworkConn, w http.ResponseWriter, r *http
 
 	firstJobDiff := LastKnownJob.Diff
 	firstJobBlob := LastKnownJob.Blob
-	firstJobAlgo := LastKnownJob.Algo
+	firstJobAlgo := LastKnownJob.Algorithm
 
 	MutLastJob.Unlock()
 
@@ -336,7 +336,7 @@ func (s *GetworkServer) wsHandler(c *GetworkConn, w http.ResponseWriter, r *http
 			continue
 		}
 
-		if len(minerBlob) != xelisutil.BLOCKMINER_LENGTH {
+		if len(minerBlob) != pow.BLOCKMINER_LENGTH {
 			log.Info()
 			continue
 		}
@@ -396,9 +396,10 @@ func (s *GetworkServer) wsHandler(c *GetworkConn, w http.ResponseWriter, r *http
 }
 
 // NOTE: Connection MUST be locked before calling this
-func SendJobGetwork(v *GetworkConn, blockDiff uint64, blob xelisutil.BlockMiner, algo string) error {
-	if algo == "xel/1" {
-		algo = "xel/v2"
+func SendJobGetwork(v *GetworkConn, blockDiff uint64, blob pow.BlockMiner, algorithm string) error {
+	algorithm, err := pow.ConvertAlgorithmToGetwork(algorithm)
+	if err != nil {
+		return err
 	}
 
 	log.Debug("SendJobGetwork blockDiff", blockDiff)
@@ -431,7 +432,7 @@ func SendJobGetwork(v *GetworkConn, blockDiff uint64, blob xelisutil.BlockMiner,
 			"height":     0,
 			"topoheight": 0,
 			"miner_work": hex.EncodeToString(blob[:]),
-			"algorithm":  algo,
+			"algorithm":  algorithm,
 		},
 	})
 }
